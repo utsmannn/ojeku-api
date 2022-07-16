@@ -25,7 +25,6 @@ class AuthenticationFilter : OncePerRequestFilter() {
 
     @Autowired
     private lateinit var userServices: UserServices
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -88,8 +87,6 @@ class AuthenticationFilter : OncePerRequestFilter() {
         val auth = UsernamePasswordAuthenticationToken(claims.subject, null, authStream)
         SecurityContextHolder.getContext().authentication = auth
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
-        println("ASUUUUU subject ---> ${claims}")
-        println("ASUUUUU user id ---> $userId")
         doOnNext.invoke()
     }
 }
