@@ -1,5 +1,7 @@
 package com.aej.ojekkuapi
 
+import com.aej.ojekkuapi.user.entity.User
+
 inline fun <reified T> T?.orThrow(
     message: String = "${T::class.simpleName} is null"
 ): T {
