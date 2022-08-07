@@ -25,22 +25,23 @@ class AuthenticationFilter : OncePerRequestFilter() {
 
     @Autowired
     private lateinit var userServices: UserServices
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
         try {
-            if (JwtConfig.isPermit(request)) {
-                filterChain.doFilter(request, response)
-            } else {
-                val claims = validate(request)
-                if (claims[Constant.CLAIMS] != null) {
+            val claims = validate(request)
+            when {
+                JwtConfig.isPermit(request) -> {
+                    filterChain.doFilter(request, response)
+                }
+                claims[Constant.CLAIMS] != null -> {
                     setupAuthentication(claims) {
                         filterChain.doFilter(request, response)
                     }
-                } else {
+                }
+                else -> {
                     SecurityContextHolder.clearContext()
                     throw OjekuException("token required")
                 }
@@ -49,7 +50,6 @@ class AuthenticationFilter : OncePerRequestFilter() {
             val errorResponse = BaseResponse<Empty>()
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = "application/json"
-            println("AA ----> ${e.message}")
             e.printStackTrace()
 
             when (e) {
@@ -69,17 +69,33 @@ class AuthenticationFilter : OncePerRequestFilter() {
                     response.writer.println(responseString)
                 }
             }
+        } catch (e: OjekuException) {
+            val errorResponse = BaseResponse<Empty>()
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.contentType = "application/json"
+            e.printStackTrace()
+
+            errorResponse.message = e.message ?: "Unknown error!"
+            val responseString = ObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(errorResponse)
+
+            response.writer.println(responseString)
         }
 
     }
 
     private fun validate(request: HttpServletRequest): Claims {
         val jwtToken = request.getHeader("Authorization")
-        return Jwts.parserBuilder()
-            .setSigningKey(Constant.SECRET.toByteArray())
-            .build()
-            .parseClaimsJws(jwtToken)
-            .body
+        if (jwtToken.isNullOrEmpty()) {
+            throw OjekuException("Error!")
+        } else {
+            return Jwts.parserBuilder()
+                .setSigningKey(Constant.SECRET.toByteArray())
+                .build()
+                .parseClaimsJws(jwtToken)
+                .body
+        }
     }
 
     private fun setupAuthentication(claims: Claims, doOnNext: () -> Unit) {
@@ -90,8 +106,6 @@ class AuthenticationFilter : OncePerRequestFilter() {
         val auth = UsernamePasswordAuthenticationToken(claims.subject, null, authStream)
         SecurityContextHolder.getContext().authentication = auth
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
-        println("ASUUUUU subject ---> ${claims}")
-        println("ASUUUUU user id ---> $userId")
         doOnNext.invoke()
     }
 }

@@ -9,7 +9,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 class OjekuExceptionHandler : ResponseEntityExceptionHandler() {
 
-
     @ExceptionHandler(value = [OjekuException::class])
     fun handleThrowable(throwable: OjekuException): ResponseEntity<BaseResponse<Empty>> {
         return ResponseEntity(BaseResponse.failure(throwable.message ?: "Failure"), HttpStatus.INTERNAL_SERVER_ERROR)
