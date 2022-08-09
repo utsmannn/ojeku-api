@@ -32,12 +32,14 @@ class JwtConfig : WebSecurityConfigurerAdapter() {
         http.sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-            .csrf().disable()
+            .csrf()
+            .disable()
             .addFilterAt(authenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .authorizeRequests()
             .antMatchers(HttpMethod.POST, *postPermit.toTypedArray()).permitAll()
             .antMatchers(HttpMethod.GET, *getPermit.toTypedArray()).permitAll()
-            .anyRequest().authenticated()
+            .anyRequest()
+            .authenticated()
     }
 
     companion object {
@@ -53,6 +55,10 @@ class JwtConfig : WebSecurityConfigurerAdapter() {
             "/api/location/reserve",
             "/api/location/routes"
         )
+
+        fun isContainPermit(path: String): Boolean {
+            return postPermit.contains(path) or getPermit.contains(path)
+        }
 
         fun generateToken(user: User): String {
             val subject = user.id

@@ -1,20 +1,21 @@
 package com.aej.ojekkuapi.authentication
 
-import com.aej.ojekkuapi.BaseResponse
-import com.aej.ojekkuapi.Constant
-import com.aej.ojekkuapi.Empty
-import com.aej.ojekkuapi.OjekuException
+import com.aej.ojekkuapi.*
 import com.aej.ojekkuapi.user.services.UserServices
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
+import io.jsonwebtoken.security.SignatureException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.servlet.NoHandlerFoundException
+import java.net.NoRouteToHostException
 import java.util.stream.Collectors
 import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletRequest
@@ -30,8 +31,11 @@ class AuthenticationFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+
         try {
-            if (JwtConfig.isPermit(request)) {
+            val headerToken = request.getHeader("Authorization")
+
+            if (headerToken.isNullOrEmpty() && JwtConfig.isPermit(request)) {
                 filterChain.doFilter(request, response)
             } else {
                 val claims = validate(request)
@@ -46,34 +50,32 @@ class AuthenticationFilter : OncePerRequestFilter() {
             }
         } catch (e: Exception) {
             val errorResponse = BaseResponse<Empty>()
-            response.status = HttpServletResponse.SC_UNAUTHORIZED
-            response.contentType = "application/json"
-            println("AA ----> ${e.message}")
             e.printStackTrace()
 
-            when (e) {
-                is UnsupportedJwtException -> {
-                    errorResponse.message = "error unsupported!"
-                    val responseString = ObjectMapper()
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(errorResponse)
-
-                    response.writer.println(responseString)
-                }
-                else -> {
-                    errorResponse.message = e.message ?: "token invalid!"
-                    val responseString = ObjectMapper()
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValueAsString(errorResponse)
-                    response.writer.println(responseString)
-                }
+            val message = when (e) {
+                is UnsupportedJwtException -> "Error unsupported!"
+                is MalformedJwtException, is SignatureException -> "Token invalid!"
+                else -> e.message ?: "Failure"
             }
-        }
 
+            response.status = HttpServletResponse.SC_UNAUTHORIZED
+            response.contentType = "application/json"
+            errorResponse.status = false
+            errorResponse.message = message
+
+            val responseString = ObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(errorResponse)
+
+            response.writer.println(responseString)
+        }
     }
 
     private fun validate(request: HttpServletRequest): Claims {
         val jwtToken = request.getHeader("Authorization")
+        if (jwtToken.isNullOrEmpty() and !JwtConfig.isPermit(request)) {
+            throw OjekuException("Token empty!")
+        }
         return Jwts.parserBuilder()
             .setSigningKey(Constant.SECRET.toByteArray())
             .build()
@@ -89,6 +91,7 @@ class AuthenticationFilter : OncePerRequestFilter() {
         val auth = UsernamePasswordAuthenticationToken(claims.subject, null, authStream)
         SecurityContextHolder.getContext().authentication = auth
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        println("assss -=> $userId")
         doOnNext.invoke()
     }
 }

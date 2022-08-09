@@ -1,18 +1,27 @@
 package com.aej.ojekkuapi.user.entity
 
-import com.aej.ojekkuapi.user.entity.extra.Extras
-import com.aej.ojekkuapi.user.entity.extra.asDriverExtras
+import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 
-data class UserRequest(
-    val username: String,
-    val password: String,
-    val extra: Extras
-) {
-    fun mapToNewDriver(): User {
-        return User.createNewDriver(username, password, extra.asDriverExtras())
+interface UserRequest {
+    fun mapToUser(): User
+
+    data class DriverRequest(
+        val username: String,
+        val password: String,
+        val vehiclesNumber: String
+    ) : UserRequest {
+        override fun mapToUser(): User {
+            val driverExtras = DriverExtras(vehiclesNumber)
+            return User.createNewDriver(username, password, driverExtras)
+        }
     }
 
-    fun mapToNewCustomer(): User {
-        return User.createNewCustomer(username, password)
+    data class CustomerRequest(
+        val username: String,
+        val password: String
+    ) : UserRequest {
+        override fun mapToUser(): User {
+            return User.createNewCustomer(username, password)
+        }
     }
 }

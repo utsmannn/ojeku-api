@@ -5,6 +5,8 @@ import com.aej.ojekkuapi.authentication.JwtConfig
 import com.aej.ojekkuapi.user.entity.LoginResponse
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.UserLogin
+import com.aej.ojekkuapi.user.entity.extra.CustomerExtras
+import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
