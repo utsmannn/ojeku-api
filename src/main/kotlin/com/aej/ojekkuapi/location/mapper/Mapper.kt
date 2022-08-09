@@ -1,9 +1,6 @@
 package com.aej.ojekkuapi.location.mapper
 
-import com.aej.ojekkuapi.location.entity.Coordinate
-import com.aej.ojekkuapi.location.entity.Location
-import com.aej.ojekkuapi.location.entity.LocationHereApiResult
-import com.aej.ojekkuapi.location.entity.LocationHereRouteResult
+import com.aej.ojekkuapi.location.entity.*
 import com.aej.ojekkuapi.location.util.PolylineEncoderDecoder
 
 object Mapper {
@@ -22,15 +19,18 @@ object Mapper {
         }.orEmpty()
     }
 
-    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): List<Coordinate> {
-        val polylineString = locationResult.routes
+    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): Routes {
+        val section = locationResult.routes
             ?.firstOrNull()
             ?.sections
             ?.firstOrNull()
-            ?.polyline
+
+        val polylineString = section?.polyline
             .orEmpty()
 
-        return PolylineEncoderDecoder.decode(polylineString)
+        val distanceInMeter = section?.summary?.length ?: 0
+        val polyline = PolylineEncoderDecoder.decode(polylineString)
             .map { Coordinate(it.lat, it.lng) }
+        return Routes(distanceInMeter.toDouble(), polyline)
     }
 }

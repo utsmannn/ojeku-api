@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val jjwtVersion: String = "0.11.5"
 val okHttpVersion: String = "4.10.0"
+val luceneVersion: String = "8.4.1"
 
 plugins {
     id("org.springframework.boot") version "2.7.1"
@@ -37,6 +38,10 @@ dependencies {
 
     // okhttp
     implementation("com.squareup.okhttp3:okhttp:$okHttpVersion")
+
+    // lucene: spatial util
+    implementation("org.apache.lucene:lucene-spatial:$luceneVersion")
+
 }
 
 tasks.withType<KotlinCompile> {

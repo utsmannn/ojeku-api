@@ -69,9 +69,23 @@ class LocationComponent {
     }
 
     companion object {
-        const val SEARCH_LOC = "https://discover.search.hereapi.com/v1/discover?at={{coordinate}}&limit=21&q={{name}}&apiKey=-pCyFg9ZHjs7E0Oz4KPBU_EuMdLUODHUAJ7qPLb6v70"
-        const val RESERVE_LOC = "https://revgeocode.search.hereapi.com/v1/revgeocode?at={{coordinate}}&lang=en-US&apiKey=-pCyFg9ZHjs7E0Oz4KPBU_EuMdLUODHUAJ7qPLb6v70"
-        const val ROUTES_POLYLINE_LOC = "https://router.hereapi.com/v8/routes?transportMode=scooter&origin={{coordinate_origin}}&destination={{coordinate_destination}}&return=polyline&apikey=-pCyFg9ZHjs7E0Oz4KPBU_EuMdLUODHUAJ7qPLb6v70"
+        private const val API_KEY = "-pCyFg9ZHjs7E0Oz4KPBU_EuMdLUODHUAJ7qPLb6v70"
+
+        const val SEARCH_LOC = "https://discover.search.hereapi.com/v1/discover?" +
+                "at={{coordinate}}" +
+                "&limit=21" +
+                "&q={{name}}" +
+                "&apiKey=$API_KEY"
+        const val RESERVE_LOC = "https://revgeocode.search.hereapi.com/v1/revgeocode?" +
+                "at={{coordinate}}" +
+                "&lang=en-US" +
+                "&apiKey=$API_KEY"
+        const val ROUTES_POLYLINE_LOC = "https://router.hereapi.com/v8/routes?" +
+                "transportMode=scooter" +
+                "&origin={{coordinate_origin}}" +
+                "&destination={{coordinate_destination}}" +
+                "&return=polyline,summary" +
+                "&apikey=$API_KEY"
     }
 
     object Key {
