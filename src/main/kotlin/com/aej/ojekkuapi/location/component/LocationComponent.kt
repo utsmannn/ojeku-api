@@ -1,5 +1,6 @@
 package com.aej.ojekkuapi.location.component
 
+import com.aej.ojekkuapi.OjekuException
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.location.entity.LocationHereApiResult
 import com.aej.ojekkuapi.location.entity.LocationHereRouteResult
@@ -59,32 +60,40 @@ class LocationComponent {
     }
 
     fun getRoutes(origin: Coordinate, destination: Coordinate): Result<LocationHereRouteResult> {
-        val coordinateOriginString = "${origin.latitude},${origin.longitude}"
-        val coordinateDestinationString = "${destination.latitude},${destination.longitude}"
         val url = ROUTES_POLYLINE_LOC
-            .replace(Key.COORDINATE_ORIGIN, coordinateOriginString)
-            .replace(Key.COORDINATE_DESTINATION, coordinateDestinationString)
+            .replace(Key.COORDINATE_ORIGIN, origin.toString())
+            .replace(Key.COORDINATE_DESTINATION, destination.toString())
+
+        return getHttp(url)
+    }
+
+    fun getDistance(origin: Coordinate, destination: Coordinate): Result<LocationHereRouteResult> {
+        val url = ROUTES_POLYLINE_LOC
+            .replace(ROUTES_RETURN, "summary")
+            .replace(Key.COORDINATE_ORIGIN, origin.toString())
+            .replace(Key.COORDINATE_DESTINATION, destination.toString())
 
         return getHttp(url)
     }
 
     companion object {
-        private const val API_KEY = "-pCyFg9ZHjs7E0Oz4KPBU_EuMdLUODHUAJ7qPLb6v70"
+        private val API_KEY = System.getenv("HERE_API_KEY")
+        private const val ROUTES_RETURN = "polyline,summary"
 
-        const val SEARCH_LOC = "https://discover.search.hereapi.com/v1/discover?" +
+        private val SEARCH_LOC = "https://discover.search.hereapi.com/v1/discover?" +
                 "at={{coordinate}}" +
                 "&limit=21" +
                 "&q={{name}}" +
                 "&apiKey=$API_KEY"
-        const val RESERVE_LOC = "https://revgeocode.search.hereapi.com/v1/revgeocode?" +
+        private val RESERVE_LOC = "https://revgeocode.search.hereapi.com/v1/revgeocode?" +
                 "at={{coordinate}}" +
                 "&lang=en-US" +
                 "&apiKey=$API_KEY"
-        const val ROUTES_POLYLINE_LOC = "https://router.hereapi.com/v8/routes?" +
+        private val ROUTES_POLYLINE_LOC = "https://router.hereapi.com/v8/routes?" +
                 "transportMode=scooter" +
                 "&origin={{coordinate_origin}}" +
                 "&destination={{coordinate_destination}}" +
-                "&return=polyline,summary" +
+                "&return=$ROUTES_RETURN" +
                 "&apikey=$API_KEY"
     }
 

@@ -1,5 +1,6 @@
 package com.aej.ojekkuapi.user.entity
 
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.entity.extra.Extras
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -11,6 +12,7 @@ data class User(
     var username: String = "",
     var password: String? = "",
     var role: Role = Role.CUSTOMER,
+    var coordinate: Coordinate = Coordinate(),
     var extra: Any = Extras.emptyExtra()
 ) {
 

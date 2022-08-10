@@ -53,12 +53,12 @@ class JwtConfig : WebSecurityConfigurerAdapter() {
             "/api/ping",
             "/api/location/search",
             "/api/location/reserve",
-            "/api/location/routes"
+            "/api/location/routes",
+            "/api/location/distance"
         )
 
-        fun isContainPermit(path: String): Boolean {
-            return postPermit.contains(path) or getPermit.contains(path)
-        }
+        const val HEADER_KEY_AUTHORIZATION = "Authorization"
+        const val HEADER_KEY_COORDINATE = "Coordinate"
 
         fun generateToken(user: User): String {
             val subject = user.id

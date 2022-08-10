@@ -2,12 +2,14 @@ package com.aej.ojekkuapi.user.services
 
 import com.aej.ojekkuapi.OjekuException
 import com.aej.ojekkuapi.authentication.JwtConfig
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.entity.LoginResponse
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.UserLogin
 import com.aej.ojekkuapi.user.entity.extra.CustomerExtras
 import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.repository.UserRepository
+import com.aej.ojekkuapi.utils.update
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,5 +49,9 @@ class UserServicesImpl(
             it.password = null
             it
         }
+    }
+
+    override fun updateCoordinate(id: String, coordinate: Coordinate): Result<Boolean> {
+        return userRepository.update(id, User::coordinate.update(coordinate))
     }
 }

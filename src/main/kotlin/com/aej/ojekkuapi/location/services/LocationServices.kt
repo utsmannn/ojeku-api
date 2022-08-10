@@ -8,4 +8,5 @@ interface LocationServices {
     fun searchLocation(name: String, coordinate: Coordinate): Result<List<Location>>
     fun reserveLocation(coordinate: Coordinate): Result<Location>
     fun getRoutesLocation(origin: Coordinate, destination: Coordinate): Result<Routes>
+    fun calculateDistance(origin: Coordinate, destination: Coordinate): Result<Double>
 }

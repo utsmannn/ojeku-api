@@ -1,6 +1,7 @@
 package com.aej.ojekkuapi.authentication
 
 import com.aej.ojekkuapi.*
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.services.UserServices
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.jsonwebtoken.Claims
@@ -33,14 +34,14 @@ class AuthenticationFilter : OncePerRequestFilter() {
     ) {
 
         try {
-            val headerToken = request.getHeader("Authorization")
+            val headerToken = request.getHeader(JwtConfig.HEADER_KEY_AUTHORIZATION)
 
             if (headerToken.isNullOrEmpty() && JwtConfig.isPermit(request)) {
                 filterChain.doFilter(request, response)
             } else {
                 val claims = validate(request)
                 if (claims[Constant.CLAIMS] != null) {
-                    setupAuthentication(claims) {
+                    setupAuthentication(claims, request) {
                         filterChain.doFilter(request, response)
                     }
                 } else {
@@ -72,7 +73,7 @@ class AuthenticationFilter : OncePerRequestFilter() {
     }
 
     private fun validate(request: HttpServletRequest): Claims {
-        val jwtToken = request.getHeader("Authorization")
+        val jwtToken = request.getHeader(JwtConfig.HEADER_KEY_AUTHORIZATION)
         if (jwtToken.isNullOrEmpty() and !JwtConfig.isPermit(request)) {
             throw OjekuException("Token empty!")
         }
@@ -83,7 +84,12 @@ class AuthenticationFilter : OncePerRequestFilter() {
             .body
     }
 
-    private fun setupAuthentication(claims: Claims, doOnNext: () -> Unit) {
+    private fun setupAuthentication(claims: Claims, request: HttpServletRequest, doOnNext: () -> Unit) {
+        val headerCoordinate = request.getHeader(JwtConfig.HEADER_KEY_COORDINATE)
+        if (headerCoordinate.isNullOrEmpty()) {
+            throw OjekuException("Header field `${JwtConfig.HEADER_KEY_COORDINATE}` is empty!")
+        }
+
         val authorities = claims[Constant.CLAIMS] as List<String>
         val authStream = authorities.stream().map { SimpleGrantedAuthority(it) }
             .collect(Collectors.toList())
@@ -91,7 +97,24 @@ class AuthenticationFilter : OncePerRequestFilter() {
         val auth = UsernamePasswordAuthenticationToken(claims.subject, null, authStream)
         SecurityContextHolder.getContext().authentication = auth
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
-        println("assss -=> $userId")
+
+        val latLngString = headerCoordinate
+            .replace(" ", "")
+            .split(",")
+
+        if (latLngString.size != 2) {
+            throw OjekuException("Header field `${JwtConfig.HEADER_KEY_COORDINATE}` invalid!")
+        }
+        val userCoordinate = Coordinate(
+            latitude = latLngString[0].toDoubleOrNull() ?: 0.0,
+            longitude = latLngString[1].toDoubleOrNull() ?: 0.0
+        )
+
+        if (userId.isNullOrEmpty()) {
+            throw OjekuException("User invalid!")
+        }
+
+        userServices.updateCoordinate(userId, userCoordinate)
         doOnNext.invoke()
     }
 }

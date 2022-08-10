@@ -2,13 +2,16 @@ package com.aej.ojekkuapi.user.repository
 
 import com.aej.ojekkuapi.DatabaseComponent
 import com.aej.ojekkuapi.OjekuException
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.toResult
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.repository.UserRepository
+import com.aej.ojekkuapi.utils.UserUpdater
 import com.mongodb.client.MongoCollection
 import org.litote.kmongo.eq
 import org.litote.kmongo.findOne
 import org.litote.kmongo.getCollection
+import org.litote.kmongo.setValue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
@@ -38,5 +41,13 @@ class UserRepositoryImpl(
 
     override fun getUserByUsername(username: String): Result<User> {
         return getCollection().findOne(User::username eq username).toResult("user with $username not found!")
+    }
+
+    override fun <T> update(id: String, updater: UserUpdater<T>): Result<Boolean> {
+        return getCollection()
+            .updateOne(
+                User::id eq id,
+                setValue(updater.property, updater.value)
+            ).wasAcknowledged().toResult()
     }
 }

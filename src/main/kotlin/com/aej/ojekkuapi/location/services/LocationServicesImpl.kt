@@ -32,4 +32,10 @@ class LocationServicesImpl(
             Mapper.mapRoutesHereToRoutes(it)
         }
     }
+
+    override fun calculateDistance(origin: Coordinate, destination: Coordinate): Result<Double> {
+        return fetcher.getDistance(origin, destination).map {
+            Mapper.mapRouteHereToDistance(it)
+        }
+    }
 }

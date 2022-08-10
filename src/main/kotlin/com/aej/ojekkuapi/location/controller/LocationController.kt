@@ -46,4 +46,14 @@ class LocationController {
         val coordinateDestination = destination.coordinateStringToData()
         return locationServices.getRoutesLocation(coordinateOrigin, coordinateDestination).toResponses()
     }
+
+    @GetMapping("/distance")
+    fun calculateDistance(
+        @RequestParam(value = "origin") origin: String,
+        @RequestParam(value = "destination") destination: String
+    ): BaseResponse<Double> {
+        val coordinateOrigin = origin.coordinateStringToData()
+        val coordinateDestination = destination.coordinateStringToData()
+        return locationServices.calculateDistance(coordinateOrigin, coordinateDestination).toResponses()
+    }
 }
