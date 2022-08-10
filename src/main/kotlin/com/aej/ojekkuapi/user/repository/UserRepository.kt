@@ -13,6 +13,5 @@ interface UserRepository {
 
     fun getUserByUsername(username: String): Result<User>
 
-    fun <T> update(id: String, updater: UserUpdater<T>): Result<Boolean>
-
+    fun <T> update(id: String, vararg updater: UserUpdater<T>): Result<Boolean>
 }

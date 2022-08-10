@@ -8,10 +8,7 @@ import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.repository.UserRepository
 import com.aej.ojekkuapi.utils.UserUpdater
 import com.mongodb.client.MongoCollection
-import org.litote.kmongo.eq
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
@@ -43,11 +40,16 @@ class UserRepositoryImpl(
         return getCollection().findOne(User::username eq username).toResult("user with $username not found!")
     }
 
-    override fun <T> update(id: String, updater: UserUpdater<T>): Result<Boolean> {
+    override fun <T> update(id: String, vararg updater: UserUpdater<T>): Result<Boolean> {
+        val fields = updater.map {
+            setValue(it.property, it.value)
+        }.run {
+            combine(this)
+        }
         return getCollection()
             .updateOne(
                 User::id eq id,
-                setValue(updater.property, updater.value)
+                fields
             ).wasAcknowledged().toResult()
     }
 }

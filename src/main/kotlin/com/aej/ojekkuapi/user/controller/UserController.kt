@@ -31,17 +31,29 @@ class UserController {
         return userServices.login(userLogin).toResponses()
     }
 
+    /**
+     * Driver auth
+     * */
     @PostMapping("/driver/register")
     fun registerDriver(
         @RequestBody userRequest: UserRequest.DriverRequest
     ): BaseResponse<Boolean> {
         return userServices.register(userRequest.mapToUser()).toResponses()
     }
+    /**
+     * END Driver auth
+     * */
 
+    /**
+     * Customer auth
+     * */
     @PostMapping("/customer/register")
     fun registerCustomer(
         @RequestBody userRequest: UserRequest.CustomerRequest
     ): BaseResponse<Boolean> {
         return userServices.register(userRequest.mapToUser()).toResponses()
     }
+    /**
+     * END Customer auth
+     * */
 }
