@@ -1,14 +1,11 @@
 package com.aej.ojekkuapi.user.controller
 
 import com.aej.ojekkuapi.BaseResponse
-import com.aej.ojekkuapi.toResponses
-import com.aej.ojekkuapi.user.entity.LoginResponse
-import com.aej.ojekkuapi.user.entity.User
-import com.aej.ojekkuapi.user.entity.UserLogin
-import com.aej.ojekkuapi.user.entity.UserRequest
+import com.aej.ojekkuapi.utils.extensions.toResponses
+import com.aej.ojekkuapi.user.entity.*
 import com.aej.ojekkuapi.user.services.UserServices
+import com.aej.ojekkuapi.utils.extensions.findUserId
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -20,7 +17,7 @@ class UserController {
 
     @GetMapping
     fun getUser(): BaseResponse<User> {
-        val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        val userId = findUserId()
         return userServices.getUserByUserId(userId.orEmpty()).toResponses()
     }
 
@@ -29,6 +26,14 @@ class UserController {
         @RequestBody userLogin: UserLogin
     ): BaseResponse<LoginResponse> {
         return userServices.login(userLogin).toResponses()
+    }
+
+    @PutMapping("/fcm_token")
+    fun updateFcmToken(
+        @RequestBody userFcm: UserFcm
+    ): BaseResponse<User> {
+        val userId = findUserId()
+        return userServices.updateFcmToken(userId.orEmpty(), userFcm.fcm).toResponses()
     }
 
     /**

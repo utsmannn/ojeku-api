@@ -1,8 +1,8 @@
 package com.aej.ojekkuapi.location.mapper
 
-import com.aej.ojekkuapi.OjekuException
 import com.aej.ojekkuapi.location.entity.*
 import com.aej.ojekkuapi.location.util.PolylineEncoderDecoder
+import com.aej.ojekkuapi.utils.extensions.computeDistance
 
 object Mapper {
     fun mapSearchLocationHereToLocation(locationResult: LocationHereApiResult): List<Location> {
@@ -29,24 +29,9 @@ object Mapper {
         val polylineString = section?.polyline
             .orEmpty()
 
-        val distanceInMeter = section?.summary?.length ?: 0
         val polyline = PolylineEncoderDecoder.decode(polylineString)
             .map { Coordinate(it.lat, it.lng) }
-        return Routes(distanceInMeter.toDouble(), polyline)
-    }
-
-    fun mapRouteHereToDistance(locationResult: LocationHereRouteResult): Double {
-        val routes = locationResult.routes.orEmpty()
-        if (routes.isEmpty()) {
-            throw OjekuException("Failed!")
-        }
-
-        val section = routes[0]?.sections.orEmpty()
-        if (section.isEmpty()) {
-            throw OjekuException("Failed!")
-        }
-
-        val result = section[0]?.summary?.length ?: 0L
-        return result.toDouble()
+        val distanceInMeter = polyline.computeDistance()
+        return Routes(distanceInMeter, polyline)
     }
 }

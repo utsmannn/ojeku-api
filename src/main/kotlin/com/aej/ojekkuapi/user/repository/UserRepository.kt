@@ -2,8 +2,7 @@ package com.aej.ojekkuapi.user.repository
 
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.entity.User
-import com.aej.ojekkuapi.utils.UserUpdater
-import com.aej.ojekkuapi.utils.update
+import com.aej.ojekkuapi.utils.DataQuery
 
 interface UserRepository {
 
@@ -13,5 +12,7 @@ interface UserRepository {
 
     fun getUserByUsername(username: String): Result<User>
 
-    fun <T> update(id: String, vararg updater: UserUpdater<T>): Result<Boolean>
+    fun <T> update(id: String, vararg updater: DataQuery<User, T>): Result<Boolean>
+
+    fun findDriversByCoordinate(coordinate: Coordinate): Result<List<User>>
 }

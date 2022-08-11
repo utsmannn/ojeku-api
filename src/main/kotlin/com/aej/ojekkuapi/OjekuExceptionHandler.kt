@@ -17,24 +17,9 @@ class OjekuExceptionHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(value = [OjekuException::class])
     fun handleThrowable(throwable: OjekuException): ResponseEntity<BaseResponse<Empty>> {
-        println("haduh -> ${throwable.message}")
+        println("ERROR: -> ${throwable.message}")
         return ResponseEntity(BaseResponse.failure(throwable.message ?: "Failure"), HttpStatus.INTERNAL_SERVER_ERROR)
     }
-
-    // // 404
-    //    @ExceptionHandler({ NoHandlerFoundException.class })
-    //    @ResponseBody
-    //    @ResponseStatus(HttpStatus.NOT_FOUND)
-    //    public CustomResponse notFound(final NoHandlerFoundException ex) {
-    //        return new CustomResponse(HttpStatus.NOT_FOUND.value(), "page not found");
-    //    }
-
-    /*@ExceptionHandler(value = [NoHandlerFoundException::class])
-    @ResponseBody
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    fun handleNotFound(throwable: NoHandlerFoundException): ResponseEntity<BaseResponse<Empty>> {
-        return ResponseEntity(BaseResponse.failure(throwable.message ?: "No routes"), HttpStatus.NOT_FOUND)
-    }*/
 
     override fun handleExceptionInternal(
         ex: Exception,
@@ -43,6 +28,7 @@ class OjekuExceptionHandler : ResponseEntityExceptionHandler() {
         status: HttpStatus,
         request: WebRequest
     ): ResponseEntity<Any> {
+        println("ERROR: -> ${ex.message}")
         return ResponseEntity(BaseResponse.failure<Empty>(ex.message ?: "Failure"), status)
     }
 
@@ -52,19 +38,7 @@ class OjekuExceptionHandler : ResponseEntityExceptionHandler() {
         status: HttpStatus,
         request: WebRequest
     ): ResponseEntity<Any> {
-        println("asuuuuuuu")
+        println("ERROR: -> ${ex.message}")
         return ResponseEntity(BaseResponse.failure<Empty>(ex.message ?: "Failure"), status)
     }
-
-    /*@ResponseStatus(HttpStatus.NOT_FOUND)
-    override fun handleNoHandlerFoundException(
-        ex: NoHandlerFoundException,
-        headers: HttpHeaders,
-        status: HttpStatus,
-        request: WebRequest
-    ): ResponseEntity<Any> {
-        println("asuuuuu")
-        return ResponseEntity(BaseResponse.failure<Empty>(ex.message ?: "Failure"), HttpStatus.NOT_FOUND)
-    }*/
-
 }

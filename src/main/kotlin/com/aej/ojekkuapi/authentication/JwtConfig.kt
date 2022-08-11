@@ -54,7 +54,8 @@ class JwtConfig : WebSecurityConfigurerAdapter() {
             "/api/location/search",
             "/api/location/reserve",
             "/api/location/routes",
-            "/api/location/distance"
+            "/api/location/distance",
+            "/api/location/find_driver"
         )
 
         const val HEADER_KEY_AUTHORIZATION = "Authorization"

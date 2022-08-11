@@ -39,4 +39,15 @@ data class User(
             )
         }
     }
+
+    fun mapToUserMini(): UserMini {
+        return UserMini(
+            username, coordinate
+        )
+    }
+
+    data class UserMini(
+        var username: String = "",
+        var coordinate: Coordinate = Coordinate()
+    )
 }

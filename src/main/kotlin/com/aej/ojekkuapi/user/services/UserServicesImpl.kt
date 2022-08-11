@@ -6,10 +6,11 @@ import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.entity.LoginResponse
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.UserLogin
-import com.aej.ojekkuapi.user.entity.extra.CustomerExtras
-import com.aej.ojekkuapi.user.entity.extra.DriverExtras
+import com.aej.ojekkuapi.user.entity.extra.Extras
 import com.aej.ojekkuapi.user.repository.UserRepository
-import com.aej.ojekkuapi.utils.update
+import com.aej.ojekkuapi.utils.DataQuery
+import com.aej.ojekkuapi.utils.extensions.to
+import org.litote.kmongo.div
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -52,6 +53,22 @@ class UserServicesImpl(
     }
 
     override fun updateCoordinate(id: String, coordinate: Coordinate): Result<Boolean> {
-        return userRepository.update(id, User::coordinate.update(coordinate))
+        return userRepository.update(id, User::coordinate.to(coordinate))
+    }
+
+    override fun updateFcmToken(id: String, token: String): Result<User> {
+        val updater = DataQuery(User::extra / Extras::fcmToken, token)
+        userRepository.update(id, updater)
+        return userRepository.getUserById(id)
+    }
+
+    override fun validateRole(id: String, role: User.Role): Result<Boolean> {
+        return userRepository.getUserById(id).map {
+            if (it.role == role) {
+                true
+            } else {
+                throw OjekuException("Permission denied with role: ${it.role}")
+            }
+        }
     }
 }

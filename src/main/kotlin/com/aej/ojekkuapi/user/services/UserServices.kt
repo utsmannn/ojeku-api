@@ -11,4 +11,6 @@ interface UserServices {
     fun getUserByUserId(id: String): Result<User>
     fun getUserByUsername(username: String): Result<User>
     fun updateCoordinate(id: String, coordinate: Coordinate): Result<Boolean>
+    fun updateFcmToken(id: String, token: String): Result<User>
+    fun validateRole(id: String, role: User.Role): Result<Boolean>
 }

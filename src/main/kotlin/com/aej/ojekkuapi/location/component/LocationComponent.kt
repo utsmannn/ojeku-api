@@ -78,7 +78,7 @@ class LocationComponent {
 
     companion object {
         private val API_KEY = System.getenv("HERE_API_KEY")
-        private const val ROUTES_RETURN = "polyline,summary"
+        private const val ROUTES_RETURN = "polyline"
 
         private val SEARCH_LOC = "https://discover.search.hereapi.com/v1/discover?" +
                 "at={{coordinate}}" +

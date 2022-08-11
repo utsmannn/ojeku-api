@@ -3,6 +3,7 @@ package com.aej.ojekkuapi.authentication
 import com.aej.ojekkuapi.*
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.services.UserServices
+import com.aej.ojekkuapi.utils.extensions.findUserId
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
@@ -32,6 +33,7 @@ class AuthenticationFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
+        println("request: ${request.method} ${request.servletPath}")
 
         try {
             val headerToken = request.getHeader(JwtConfig.HEADER_KEY_AUTHORIZATION)
@@ -96,7 +98,7 @@ class AuthenticationFilter : OncePerRequestFilter() {
 
         val auth = UsernamePasswordAuthenticationToken(claims.subject, null, authStream)
         SecurityContextHolder.getContext().authentication = auth
-        val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        val userId = findUserId()
 
         val latLngString = headerCoordinate
             .replace(" ", "")

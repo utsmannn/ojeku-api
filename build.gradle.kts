@@ -2,7 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val jjwtVersion: String = "0.11.5"
 val okHttpVersion: String = "4.10.0"
+val kMongoVersion: String = "4.6.1"
 val luceneVersion: String = "8.4.1"
+val firebaseVersion: String = "9.0.0"
 
 plugins {
     id("org.springframework.boot") version "2.7.1"
@@ -29,7 +31,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
 
-    implementation("org.litote.kmongo:kmongo:4.6.0")
+    implementation("org.litote.kmongo:kmongo:$kMongoVersion")
 
     // jwt
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
@@ -42,6 +44,11 @@ dependencies {
     // lucene: spatial util
     implementation("org.apache.lucene:lucene-spatial:$luceneVersion")
 
+    // firebase
+    implementation("com.google.firebase:firebase-admin:$firebaseVersion")
+
+    // date support
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 
 tasks.withType<KotlinCompile> {

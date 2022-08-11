@@ -1,12 +1,12 @@
 package com.aej.ojekkuapi.location.controller
 
 import com.aej.ojekkuapi.BaseResponse
-import com.aej.ojekkuapi.coordinateStringToData
-import com.aej.ojekkuapi.location.services.LocationServices
-import com.aej.ojekkuapi.location.entity.Coordinate
+import com.aej.ojekkuapi.utils.extensions.coordinateStringToData
 import com.aej.ojekkuapi.location.entity.Location
 import com.aej.ojekkuapi.location.entity.Routes
-import com.aej.ojekkuapi.toResponses
+import com.aej.ojekkuapi.location.services.LocationServices
+import com.aej.ojekkuapi.utils.extensions.toResponses
+import com.aej.ojekkuapi.user.entity.User
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -55,5 +55,13 @@ class LocationController {
         val coordinateOrigin = origin.coordinateStringToData()
         val coordinateDestination = destination.coordinateStringToData()
         return locationServices.calculateDistance(coordinateOrigin, coordinateDestination).toResponses()
+    }
+
+    @GetMapping("/find_driver")
+    fun findDriver(
+        @RequestParam(value = "coordinate") coordinateString: String
+    ): BaseResponse<List<User>> {
+        val coordinate = coordinateString.coordinateStringToData()
+        return locationServices.findDriverFromCoordinate(coordinate).toResponses()
     }
 }

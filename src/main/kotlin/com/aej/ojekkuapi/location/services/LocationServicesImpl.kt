@@ -5,14 +5,18 @@ import com.aej.ojekkuapi.location.mapper.Mapper
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.location.entity.Location
 import com.aej.ojekkuapi.location.entity.Routes
-import com.aej.ojekkuapi.orThrow
+import com.aej.ojekkuapi.utils.extensions.orThrow
+import com.aej.ojekkuapi.user.entity.User
+import com.aej.ojekkuapi.user.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class LocationServicesImpl(
     @Autowired
-    private val fetcher: LocationComponent
+    private val fetcher: LocationComponent,
+    @Autowired
+    private val userRepository: UserRepository
 ) : LocationServices {
 
     override fun searchLocation(name: String, coordinate: Coordinate): Result<List<Location>> {
@@ -34,8 +38,12 @@ class LocationServicesImpl(
     }
 
     override fun calculateDistance(origin: Coordinate, destination: Coordinate): Result<Double> {
-        return fetcher.getDistance(origin, destination).map {
-            Mapper.mapRouteHereToDistance(it)
+        return getRoutesLocation(origin, destination).map {
+            it.distanceInMeter
         }
+    }
+
+    override fun findDriverFromCoordinate(coordinate: Coordinate): Result<List<User>> {
+        return userRepository.findDriversByCoordinate(coordinate)
     }
 }
