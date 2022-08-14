@@ -48,7 +48,6 @@ class AuthenticationFilter : OncePerRequestFilter() {
             val errorResponse = BaseResponse<Empty>()
             response.status = HttpServletResponse.SC_UNAUTHORIZED
             response.contentType = "application/json"
-            println("AA ----> ${e.message}")
             e.printStackTrace()
 
             when (e) {
