@@ -13,7 +13,7 @@ data class User(
     var username: String = "",
     var password: String? = "",
     var role: Role = Role.CUSTOMER,
-    var extra: Extras = emptyExtra()
+    var extra: Any = emptyExtra()
 ) {
 
     enum class Role {

@@ -1,8 +1,7 @@
 package com.aej.ojekkuapi.user.entity.extra
 
-interface Extras
-
-fun emptyExtra() = object : Extras {}
+open class Extras
+fun emptyExtra() = object : Extras() {}
 
 fun Extras.asDriverExtras(): DriverExtras = this as DriverExtras
 fun Extras.asCustomerExtras(): CustomerExtras = this as CustomerExtras
