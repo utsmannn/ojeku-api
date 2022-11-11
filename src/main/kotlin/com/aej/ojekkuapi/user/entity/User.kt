@@ -13,6 +13,8 @@ data class User(
     var username: String = "",
     var password: String? = "",
     var role: Role = Role.CUSTOMER,
+    @JsonProperty("fcm_token")
+    var fcmToken: String = "",
     var extra: Any = emptyExtra()
 ) {
 

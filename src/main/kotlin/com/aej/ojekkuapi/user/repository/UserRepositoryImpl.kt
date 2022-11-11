@@ -9,9 +9,7 @@ import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.repository.UserRepository
 import com.aej.ojekkuapi.utils.safeCastTo
 import com.mongodb.client.MongoCollection
-import org.litote.kmongo.eq
-import org.litote.kmongo.findOne
-import org.litote.kmongo.getCollection
+import org.litote.kmongo.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
@@ -48,5 +46,10 @@ class UserRepositoryImpl(
 
     override fun getUserByUsername(username: String): Result<User> {
         return getCollection().findOne(User::username eq username).toResult("user with $username not found!")
+    }
+
+    override fun updateFcmToken(id: String, fcmToken: String): Result<User> {
+        getCollection().updateOne(User::id eq id, User::fcmToken setTo fcmToken).toResult()
+        return getUserById(id)
     }
 }

@@ -8,6 +8,7 @@ import com.aej.ojekkuapi.user.entity.UserLogin
 import com.aej.ojekkuapi.user.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class UserServicesImpl(
@@ -42,6 +43,13 @@ class UserServicesImpl(
 
     override fun getUserByUsername(username: String): Result<User> {
         return userRepository.getUserByUsername(username).map {
+            it.password = null
+            it
+        }
+    }
+
+    override fun updateFcmToken(id: String, fcmToken: String): Result<User> {
+        return userRepository.updateFcmToken(id, fcmToken).map {
             it.password = null
             it
         }

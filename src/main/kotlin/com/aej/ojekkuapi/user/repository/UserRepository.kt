@@ -9,4 +9,5 @@ interface UserRepository {
     fun getUserById(id: String): Result<User>
 
     fun getUserByUsername(username: String): Result<User>
+    fun updateFcmToken(id: String, fcmToken: String): Result<User>
 }

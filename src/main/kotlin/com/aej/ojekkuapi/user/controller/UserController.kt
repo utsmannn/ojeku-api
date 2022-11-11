@@ -8,10 +8,12 @@ import com.aej.ojekkuapi.user.services.UserServices
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.request.CustomerRegisterRequest
 import com.aej.ojekkuapi.user.entity.request.DriverRegisterRequest
+import com.aej.ojekkuapi.user.entity.request.UpdateFcmToken
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -34,6 +36,14 @@ class UserController {
         @RequestBody userLogin: UserLogin
     ): BaseResponse<LoginResponse> {
         return userServices.login(userLogin).toResponses()
+    }
+
+    @PutMapping("/fcm")
+    fun updateFcmToken(
+        @RequestBody updateFcmToken: UpdateFcmToken
+    ): BaseResponse<User> {
+        val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        return userServices.updateFcmToken(userId.orEmpty(), updateFcmToken.fcm).toResponses()
     }
 
     @PostMapping("/driver/register")
