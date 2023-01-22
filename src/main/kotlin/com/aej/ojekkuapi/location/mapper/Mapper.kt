@@ -1,5 +1,7 @@
 package com.aej.ojekkuapi.location.mapper
 
+import com.aej.ojekkuapi.booking.entity.Booking
+import com.aej.ojekkuapi.booking.entity.BookingMinified
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.location.entity.Location
 import com.aej.ojekkuapi.location.entity.LocationHereApiResult
@@ -12,7 +14,7 @@ object Mapper {
             val address = Location.Address(
                 city = it?.address?.city.orEmpty(),
                 country = it?.address?.countryName.orEmpty(),
-                distric = it?.address?.district.orEmpty()
+                district = it?.address?.district.orEmpty()
             )
             Location(
                 name = it?.title.orEmpty(),
@@ -22,15 +24,26 @@ object Mapper {
         }.orEmpty()
     }
 
-    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): List<Coordinate> {
-        val polylineString = locationResult.routes
+    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): Pair<List<Coordinate>, Long> {
+        val section = locationResult.routes
             ?.firstOrNull()
             ?.sections
             ?.firstOrNull()
-            ?.polyline
-            .orEmpty()
 
-        return PolylineEncoderDecoder.decode(polylineString)
+        val polylineString = section?.polyline.orEmpty()
+
+        val coordinates = PolylineEncoderDecoder.decode(polylineString)
             .map { Coordinate(it.lat, it.lng) }
+        val distance = section?.summary?.length ?: 0L
+        return Pair(coordinates, distance)
+    }
+
+    fun mapBookingToMinified(booking: Booking): BookingMinified {
+        return BookingMinified(
+            id = booking.id,
+            price = booking.price,
+            transType = booking.transType,
+            time = booking.time
+        )
     }
 }

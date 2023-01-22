@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 class DatabaseComponent {
 
     companion object {
-        private const val DATABASE_URL = "mongodb+srv://aej:1234@cluster0.npggr.mongodb.net/?retryWrites=true&w=majority"
+        private const val DATABASE_URL = "mongodb+srv://aej:1234@cluster0.gwaoboa.mongodb.net/?retryWrites=true&w=majority"
     }
 
     val database: MongoClient = KMongo.createClient(DATABASE_URL)

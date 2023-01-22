@@ -8,6 +8,6 @@ data class Location(
     data class Address(
         var city: String = "",
         var country: String = "",
-        var distric: String = ""
+        var district: String = ""
     )
 }

@@ -28,6 +28,8 @@ data class LocationHereRouteResult(
             var polyline: String?,
             @JsonProperty("transport")
             var transport: Transport?,
+            @JsonProperty("summary")
+            var summary: Summary?,
             @JsonProperty("type")
             var type: String?
         ) {
@@ -103,6 +105,14 @@ data class LocationHereRouteResult(
             data class Transport(
                 @JsonProperty("mode")
                 var mode: String?
+            )
+
+            @JsonIgnoreProperties(ignoreUnknown = true)
+            data class Summary(
+                @JsonProperty("duration")
+                var duration: Long,
+                @JsonProperty("length")
+                var length: Long
             )
         }
     }

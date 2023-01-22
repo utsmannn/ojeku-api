@@ -1,6 +1,9 @@
 package com.aej.ojekkuapi
 
 import com.aej.ojekkuapi.location.entity.Coordinate
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 inline fun <reified T> T?.orThrow(
     message: String = "${T::class.simpleName} is null"
@@ -26,10 +29,15 @@ fun <T>Result<T>.toResponses(): BaseResponse<T> {
     }
 }
 
-
 fun String.coordinateStringToData(): Coordinate {
     val coordinateStrings = split(",")
     val lat = coordinateStrings[0].toDoubleOrNull() ?: 0.0
     val lon = coordinateStrings[1].toDoubleOrNull() ?: 0.0
     return Coordinate(lat, lon)
+}
+
+fun LocalDateTime.parseString(): String {
+    val format = "dd LLLL yyyy, hh:mm a"
+    val formatter = DateTimeFormatter.ofPattern(format)
+    return this.format(formatter)
 }
