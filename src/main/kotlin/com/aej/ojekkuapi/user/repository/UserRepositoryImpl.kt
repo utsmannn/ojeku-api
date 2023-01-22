@@ -2,6 +2,7 @@ package com.aej.ojekkuapi.user.repository
 
 import com.aej.ojekkuapi.DatabaseComponent
 import com.aej.ojekkuapi.OjekuException
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.toResult
 import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.extra.CustomerExtras
@@ -50,6 +51,14 @@ class UserRepositoryImpl(
 
     override fun updateFcmToken(id: String, fcmToken: String): Result<User> {
         getCollection().updateOne(User::id eq id, User::fcmToken setTo fcmToken).toResult()
+        return getUserById(id)
+    }
+
+    override fun updateDriverActive(id: String, isDriverActive: Boolean): Result<User> {
+        getCollection().updateOne(
+            User::id eq id,
+            User::extra / DriverExtras::isActive setTo isDriverActive
+        ).toResult()
         return getUserById(id)
     }
 }

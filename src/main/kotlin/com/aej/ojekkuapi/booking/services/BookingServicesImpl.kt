@@ -8,6 +8,7 @@ import com.aej.ojekkuapi.location.services.LocationServices
 import com.aej.ojekkuapi.messaging.MessagingComponent
 import com.aej.ojekkuapi.messaging.entity.FcmMessage
 import com.aej.ojekkuapi.user.repository.UserRepository
+import com.aej.ojekkuapi.user.services.UserServices
 import com.aej.ojekkuapi.utils.PriceCalculator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -20,7 +21,7 @@ class BookingServicesImpl(
     @Autowired
     private val locationServices: LocationServices,
     @Autowired
-    private val userRepository: UserRepository,
+    private val userServices: UserServices,
     @Autowired
     private val messagingComponent: MessagingComponent
 ) : BookingServices {
@@ -73,6 +74,13 @@ class BookingServicesImpl(
             currentBooking.driverId,
             newPrice
         )
+
+        BookingNotification.findDrivers(
+            booking = currentBooking,
+            userServices = userServices,
+            messagingComponent = messagingComponent
+        )
+
         notifyToUsers(currentBooking.customerId, currentBooking.driverId, currentBooking)
         return bookingRepository.getBookingById(bookingId)
     }
@@ -122,8 +130,8 @@ class BookingServicesImpl(
     }
 
     private suspend fun notifyToUsers(customerId: String, driverId: String, booking: Booking) {
-        val customer = userRepository.getUserById(customerId).getOrNull()
-        val driver = userRepository.getUserById(driverId).getOrNull()
+        val customer = userServices.getUserByUserId(customerId).getOrNull()
+        val driver = userServices.getUserByUserId(driverId).getOrNull()
 
         val messageData = FcmMessage.FcmMessageData(
             type = FcmMessage.Type.BOOKING,
