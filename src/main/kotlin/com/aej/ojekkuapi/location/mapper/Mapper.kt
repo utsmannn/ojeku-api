@@ -6,6 +6,7 @@ import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.location.entity.Location
 import com.aej.ojekkuapi.location.entity.LocationHereApiResult
 import com.aej.ojekkuapi.location.entity.LocationHereRouteResult
+import com.aej.ojekkuapi.location.entity.response.OpenRouteResponse
 import com.aej.ojekkuapi.location.util.PolylineEncoderDecoder
 
 object Mapper {
@@ -24,7 +25,7 @@ object Mapper {
         }.orEmpty()
     }
 
-    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): Pair<List<Coordinate>, Long> {
+    fun mapRoutesHereToRoutes(locationResult: LocationHereRouteResult): Triple<List<Coordinate>, Long, Long> {
         val section = locationResult.routes
             ?.firstOrNull()
             ?.sections
@@ -35,7 +36,22 @@ object Mapper {
         val coordinates = PolylineEncoderDecoder.decode(polylineString)
             .map { Coordinate(it.lat, it.lng) }
         val distance = section?.summary?.length ?: 0L
-        return Pair(coordinates, distance)
+        val duration = section?.summary?.duration ?: 0L
+        return Triple(coordinates, distance, duration)
+    }
+
+    fun mapOpenRouteToRoutes(routeResponse: OpenRouteResponse): Pair<List<Coordinate>, Long> {
+        val feature = routeResponse.features?.firstOrNull()
+        val length = feature?.properties?.summary?.distance?.toLong() ?: 0L
+        val coordinates = feature?.geometry
+            ?.coordinates
+            .orEmpty()
+            .map {
+                val lat = it?.get(1) ?: 0.0
+                val lon = it?.get(0) ?: 0.0
+                Coordinate(lat, lon)
+            }
+        return Pair(coordinates, length)
     }
 
     fun mapBookingToMinified(booking: Booking): BookingMinified {

@@ -28,7 +28,7 @@ data class Booking(
     data class RouteLocation(
         var from: Location = Location(),
         var destination: Location = Location(),
-        var routes: Routes = Routes(emptyList(), 0L)
+        var routes: Routes = Routes(0L, 0L, emptyList())
     )
 
     data class Time(
@@ -40,7 +40,7 @@ data class Booking(
     )
 
     enum class BookingStatus {
-        READY, REQUEST, ACCEPTED, CANCELED, ONGOING, DONE, UNDEFINE
+        READY, REQUEST, REQUEST_RETRY, ACCEPTED, CANCELED, ONGOING, DONE, UNDEFINE
     }
 
     enum class TransType {

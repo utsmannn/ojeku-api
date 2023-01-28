@@ -1,8 +1,10 @@
 package com.aej.ojekkuapi.user.entity
 
+import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.entity.extra.Extras
 import com.aej.ojekkuapi.user.entity.extra.emptyExtra
+import com.aej.ojekkuapi.user.entity.request.UserView
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.*
@@ -15,7 +17,9 @@ data class User(
     var role: Role = Role.CUSTOMER,
     @JsonProperty("fcm_token")
     var fcmToken: String = "",
-    var extra: Any = emptyExtra()
+    var extra: Any = emptyExtra(),
+    @JsonProperty("last_location")
+    var lastLocation: List<Double> = listOf(0.0, 0.0)
 ) {
 
     enum class Role {
@@ -40,5 +44,11 @@ data class User(
                 role = Role.CUSTOMER
             )
         }
+    }
+
+    fun toUserView(): UserView {
+        return UserView(
+            id, username, password, role, fcmToken, extra, Coordinate(lastLocation[1], lastLocation[0])
+        )
     }
 }

@@ -52,6 +52,10 @@ class BookingRepositoryImpl(
         return getCollection().findOne(Booking::customerId eq customerId).toResult("Transaction not found!")
     }
 
+    override fun getBookingByDriverId(driverId: String): Result<Booking> {
+        return getCollection().findOne(Booking::driverId eq driverId).toResult("Transaction not found!")
+    }
+
     override fun startBooking(
         bookingId: String,
         transType: Booking.TransType,

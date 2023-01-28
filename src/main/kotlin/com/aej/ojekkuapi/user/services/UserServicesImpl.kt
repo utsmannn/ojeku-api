@@ -2,28 +2,36 @@ package com.aej.ojekkuapi.user.services
 
 import com.aej.ojekkuapi.OjekuException
 import com.aej.ojekkuapi.authentication.JwtConfig
+import com.aej.ojekkuapi.booking.entity.Booking
+import com.aej.ojekkuapi.booking.repository.BookingRepository
 import com.aej.ojekkuapi.location.entity.Coordinate
+import com.aej.ojekkuapi.location.services.LocationServices
+import com.aej.ojekkuapi.messaging.MessagingComponent
+import com.aej.ojekkuapi.messaging.entity.FcmMessage
+import com.aej.ojekkuapi.toResult
 import com.aej.ojekkuapi.user.entity.LoginResponse
 import com.aej.ojekkuapi.user.entity.User
-import com.aej.ojekkuapi.user.entity.UserLocation
 import com.aej.ojekkuapi.user.entity.UserLogin
-import com.aej.ojekkuapi.user.entity.extra.DriverExtras
-import com.aej.ojekkuapi.user.repository.UserLocationRepository
+import com.aej.ojekkuapi.user.entity.request.UserView
 import com.aej.ojekkuapi.user.repository.UserRepository
-import com.aej.ojekkuapi.utils.safeCastTo
+import com.aej.ojekkuapi.utils.toJson
+import org.litote.kmongo.json
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 
 @Service
 class UserServicesImpl(
     @Autowired
     private val userRepository: UserRepository,
     @Autowired
-    private val userLocationRepository: UserLocationRepository
+    private val bookingRepository: BookingRepository,
+    @Autowired
+    private val messagingComponent: MessagingComponent,
+    @Autowired
+    private val locationServices: LocationServices
 ) : UserServices {
 
-    override fun login(userLogin: UserLogin): Result<LoginResponse> {
+    override suspend fun login(userLogin: UserLogin): Result<LoginResponse> {
         val resultUser = userRepository.getUserByUsername(userLogin.username)
         return resultUser.map {
             val token = JwtConfig.generateToken(it)
@@ -37,53 +45,78 @@ class UserServicesImpl(
         }
     }
 
-    override fun register(user: User): Result<Boolean> {
+    override suspend fun register(user: User): Result<Boolean> {
         return userRepository.insertUser(user)
     }
 
-    override fun getUserByUserId(id: String): Result<User> {
+    override suspend fun getUserByUserId(id: String): Result<UserView> {
         return userRepository.getUserById(id).map {
             it.password = null
             it
-        }
+        }.map { it.toUserView() }
     }
 
-    override fun getUserByUsername(username: String): Result<User> {
+    override suspend fun getUserByUserIdAndRole(id: String, role: User.Role): Result<UserView> {
+        val currentUser = getUserByUserId(id).getOrThrow()
+        if (currentUser.role != role) throw OjekuException("Forbidden by user role!")
+        return currentUser.toResult()
+    }
+
+    override suspend fun getUserByUsername(username: String): Result<UserView> {
         return userRepository.getUserByUsername(username).map {
             it.password = null
             it
-        }
+        }.map { it.toUserView() }
     }
 
-    override fun updateFcmToken(id: String, fcmToken: String): Result<User> {
+    override suspend fun updateFcmToken(id: String, fcmToken: String): Result<UserView> {
         return userRepository.updateFcmToken(id, fcmToken).map {
             it.password = null
             it
-        }
+        }.map { it.toUserView() }
     }
 
-    override fun updateDriverActive(id: String, isDriverActive: Boolean): Result<User> {
-        return userRepository.updateDriverActive(id, isDriverActive)
+    override suspend fun updateDriverActive(id: String, isDriverActive: Boolean): Result<UserView> {
+        return userRepository.updateDriverActive(id, isDriverActive).map { it.toUserView() }
     }
 
-    override fun updateUserLocation(id: String, coordinate: Coordinate): Result<UserLocation> {
-        return userLocationRepository.updateLocation(id, coordinate)
-    }
+    override suspend fun updateUserLocation(id: String, coordinate: Coordinate): Result<UserView> {
+        val updatedUserResult = userRepository.updateUserLocation(id, coordinate).map { it.toUserView() }
+        val currentUser = updatedUserResult.getOrThrow()
+        if (currentUser.role == User.Role.DRIVER) {
+            val currentBooking = bookingRepository.getBookingByDriverId(currentUser.id).getOrNull()
+            val customerId = currentBooking?.customerId
+            if (customerId != null && currentBooking.status == Booking.BookingStatus.ACCEPTED) {
+                val currentCustomer = userRepository.getUserById(customerId).getOrNull()
+                if (currentCustomer != null) {
+                    val pickupCoordinate = currentBooking.routeLocation.from.coordinate
+                    val route = locationServices.getRoutesLocation(coordinate, pickupCoordinate).getOrNull()
+                    val messageExtra = mapOf(
+                        "driver" to coordinate,
+                        "route" to route
+                    )
 
-    override fun getUserLocation(id: String): Result<UserLocation> {
-        return userLocationRepository.getUserLocation(id)
-    }
+                    val driverToken = currentUser.fcmToken
+                    val customerToken = currentCustomer.fcmToken
+                    val messageData = FcmMessage.FcmMessageData(
+                        type = FcmMessage.Type.BOOKING_LOCATION,
+                        customerId = customerId,
+                        driverId = currentUser.id,
+                        bookingId = currentBooking.id,
+                        message = "Driver position updated",
+                        json = messageExtra.json
+                    )
 
-    override fun findDriverByCoordinate(coordinate: Coordinate): Result<List<User>> {
-        val userLocationList = userLocationRepository.findDriverByCoordinate(coordinate)
-            .map {
-                it.map {
-                    userRepository.getUserById(it.id).getOrNull()
-                }.filterNotNull()
-                    .filter { it.role == User.Role.DRIVER }
-                    .filter { it.extra.safeCastTo(DriverExtras::class.java).isActive }
+                    messagingComponent.sendMessage(customerToken, messageData)
+                    messagingComponent.sendMessage(driverToken, messageData)
+                }
             }
+        }
+        return updatedUserResult
+    }
 
-        return userLocationList
+    override suspend fun findDriverByCoordinate(coordinate: Coordinate): Result<List<UserView>> {
+        val userLocationList = userRepository.findDriverByCoordinates(coordinate)
+        return userLocationList.map { it.map { it.toUserView() } }
     }
 }

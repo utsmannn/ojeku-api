@@ -17,10 +17,14 @@ data class FcmMessage(
         @JsonProperty("driver_id")
         val driverId: String = "",
         @JsonProperty("booking_id")
-        val bookingId: String = ""
+        val bookingId: String = "",
+        @JsonProperty("message")
+        val message: String = "",
+        @JsonProperty("json")
+        val json: String = "{}"
     )
 
     enum class Type {
-        GENERAL, BOOKING
+        GENERAL, BOOKING, BOOKING_UNAVAILABLE, BOOKING_LOCATION
     }
 }

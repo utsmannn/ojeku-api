@@ -29,8 +29,8 @@ class LocationServicesImpl(
 
     override fun getRoutesLocation(origin: Coordinate, destination: Coordinate): Result<Routes> {
         return fetcher.getRoutes(origin, destination).map {
-            val (coordinates, distance) = Mapper.mapRoutesHereToRoutes(it)
-            Routes(coordinates, distance)
+            val (coordinates, distance, duration) = Mapper.mapRoutesHereToRoutes(it)
+            Routes(distance, duration, coordinates)
         }
     }
 }

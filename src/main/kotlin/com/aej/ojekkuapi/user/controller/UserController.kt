@@ -12,9 +12,11 @@ import com.aej.ojekkuapi.user.entity.UserLocation
 import com.aej.ojekkuapi.user.entity.request.CustomerRegisterRequest
 import com.aej.ojekkuapi.user.entity.request.DriverRegisterRequest
 import com.aej.ojekkuapi.user.entity.request.UpdateFcmToken
+import com.aej.ojekkuapi.user.entity.request.UserView
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -30,37 +32,37 @@ class UserController {
     private lateinit var userServices: UserServices
 
     @GetMapping
-    fun getUser(): BaseResponse<User> {
+    suspend fun getUser(): BaseResponse<UserView> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
         return userServices.getUserByUserId(userId.orEmpty()).toResponses()
     }
 
     @PostMapping("/login")
-    fun login(
+    suspend fun login(
         @RequestBody userLogin: UserLogin
     ): BaseResponse<LoginResponse> {
         return userServices.login(userLogin).toResponses()
     }
 
     @PutMapping("/fcm")
-    fun updateFcmToken(
+    suspend fun updateFcmToken(
         @RequestBody updateFcmToken: UpdateFcmToken
-    ): BaseResponse<User> {
+    ): BaseResponse<UserView> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
         return userServices.updateFcmToken(userId.orEmpty(), updateFcmToken.fcm).toResponses()
     }
 
     @PutMapping("/location")
-    fun updateLocation(
+    suspend fun updateLocation(
         @RequestParam(value = "coordinate", required = true) coordinateString: String
-    ): BaseResponse<UserLocation> {
+    ): BaseResponse<UserView> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
         val coordinate = coordinateString.coordinateStringToData()
         return userServices.updateUserLocation(userId.orEmpty(), coordinate).toResponses()
     }
 
     @PostMapping("/driver/register")
-    fun registerDriver(
+    suspend fun registerDriver(
         @RequestBody userRequest: DriverRegisterRequest
     ): BaseResponse<Boolean> {
         val user = userRequest.mapToUser()
@@ -68,18 +70,32 @@ class UserController {
     }
 
     @PostMapping("/driver/active")
-    fun postDriverActive(
+    suspend fun postDriverActive(
         @RequestParam(value = "is_active", required = true) isActive: Boolean
-    ): BaseResponse<User> {
+    ): BaseResponse<UserView> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
         return userServices.updateDriverActive(userId.orEmpty(), isActive).toResponses()
     }
 
+    @GetMapping("/driver/{user_id}")
+    suspend fun getDriverByUserId(
+        @PathVariable(value = "user_id") userId: String
+    ): BaseResponse<UserView> {
+        return userServices.getUserByUserIdAndRole(userId, User.Role.DRIVER).toResponses()
+    }
+
     @PostMapping("/customer/register")
-    fun registerCustomer(
+    suspend fun registerCustomer(
         @RequestBody userRequest: CustomerRegisterRequest
     ): BaseResponse<Boolean> {
         val user = userRequest.mapToUser()
         return userServices.register(user).toResponses()
+    }
+
+    @GetMapping("/customer/{user_id}")
+    suspend fun getCustomerByUserId(
+        @PathVariable(value = "user_id") userId: String
+    ): BaseResponse<UserView> {
+        return userServices.getUserByUserIdAndRole(userId, User.Role.CUSTOMER).toResponses()
     }
 }

@@ -10,6 +10,7 @@ import com.aej.ojekkuapi.toResponses
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -30,6 +31,13 @@ class BookingController {
         return bookingServices.getCurrentBookingCustomer(userId.orEmpty(), status).toResponses()
     }
 
+    @GetMapping("/{booking_id}")
+    suspend fun getBookingById(
+        @PathVariable(value = "booking_id") bookingId: String
+    ): BaseResponse<Booking> {
+        return bookingServices.getBookingById(bookingId).toResponses()
+    }
+
     @GetMapping("/activity")
     suspend fun getActivityBookingCustomer(): BaseResponse<List<BookingMinified>> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
@@ -38,7 +46,7 @@ class BookingController {
         }.toResponses()
     }
 
-    @PostMapping
+    @PostMapping("/customer/create")
     suspend fun postBookingCustomer(
         @RequestParam(value = "from", required = true) from: String,
         @RequestParam(value = "destination", required = true) destination: String
@@ -51,7 +59,7 @@ class BookingController {
             .toResponses()
     }
 
-    @PostMapping("/request")
+    @PostMapping("/customer/request")
     suspend fun postBookingRequestCustomer(
         @RequestParam(value = "booking_id", required = true) bookingId: String,
         @RequestParam(value = "trans_type", required = true) transType: Booking.TransType
@@ -59,10 +67,26 @@ class BookingController {
         return bookingServices.startBookingFromCustomer(bookingId, transType).toResponses()
     }
 
-    @PostMapping("/cancel")
+    @PostMapping("/customer/cancel")
     suspend fun cancelBookingCustomer(
         @RequestParam(value = "booking_id", required = true) bookingId: String
     ): BaseResponse<Booking> {
         return bookingServices.cancelBookingFromCustomer(bookingId).toResponses()
+    }
+
+    @PostMapping("/driver/reject")
+    suspend fun rejectBookingDriver(
+        @RequestParam(value = "booking_id", required = true) bookingId: String
+    ): BaseResponse<Boolean> {
+        val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        return bookingServices.rejectBookingFromDriver(bookingId, userId.orEmpty()).toResponses()
+    }
+
+    @PostMapping("/driver/accept")
+    suspend fun acceptBookingDriver(
+        @RequestParam(value = "booking_id", required = true) bookingId: String
+    ): BaseResponse<Booking> {
+        val userId = SecurityContextHolder.getContext().authentication.principal as? String
+        return bookingServices.acceptBookingFromDriver(bookingId, userId.orEmpty()).toResponses()
     }
 }

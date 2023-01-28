@@ -1,6 +1,10 @@
 package com.aej.ojekkuapi.location.entity
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class Routes(
-    val route: List<Coordinate>,
-    val distance: Long
+    val distance: Long,
+    @JsonProperty("duration_estimation")
+    val durationEstimated: Long,
+    val route: List<Coordinate>
 )

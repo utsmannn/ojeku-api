@@ -10,6 +10,8 @@ import com.aej.ojekkuapi.user.entity.extra.DriverExtras
 import com.aej.ojekkuapi.user.repository.UserRepository
 import com.aej.ojekkuapi.utils.safeCastTo
 import com.mongodb.client.MongoCollection
+import com.mongodb.client.model.geojson.Point
+import com.mongodb.client.model.geojson.Position
 import org.litote.kmongo.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -60,5 +62,30 @@ class UserRepositoryImpl(
             User::extra / DriverExtras::isActive setTo isDriverActive
         ).toResult()
         return getUserById(id)
+    }
+
+    override fun updateUserLocation(id: String, coordinate: Coordinate): Result<User> {
+        getCollection().updateOne(
+            User::id eq id,
+            User::lastLocation setTo listOf(coordinate.longitude, coordinate.latitude)
+        ).toResult()
+
+        return getUserById(id)
+    }
+
+    override fun findDriverByCoordinates(coordinate: Coordinate): Result<List<User>> {
+        getCollection().createIndex("{ last_location : \"2dsphere\" }")
+        return getCollection().find(
+            " {\n" +
+                    "     last_location:\n" +
+                    "       { \$nearSphere :\n" +
+                    "          {\n" +
+                    "            \$geometry: { type: \"Point\",  coordinates: [ ${coordinate.longitude}, ${coordinate.latitude} ] },\n" +
+                    "            \$minDistance: 10,\n" +
+                    "            \$maxDistance: 2000\n" +
+                    "          }\n" +
+                    "       }\n" +
+                    "   }"
+        ).toList().filter { it.extra.safeCastTo(DriverExtras::class.java).isActive }.toResult()
     }
 }
