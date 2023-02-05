@@ -10,6 +10,7 @@ interface BookingRepository {
     fun getBookingByDriverId(driverId: String): Result<Booking>
     fun getBookingsByCustomerId(customerId: String): Result<List<Booking>>
     fun getBookingByCustomerIdAndStatus(customerId: String, status: Booking.BookingStatus): Result<Booking>
+    fun getBookingByDriverIdAndStatus(driverId: String, status: Booking.BookingStatus): Result<Booking>
     fun startBooking(bookingId: String, transType: Booking.TransType, driverId: String, price: Double): Result<Booking>
     fun updateBookingStatus(bookingId: String, bookingStatus: Booking.BookingStatus, driverId: String): Result<Booking>
 }

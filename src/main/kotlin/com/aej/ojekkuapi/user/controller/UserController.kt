@@ -13,6 +13,7 @@ import com.aej.ojekkuapi.user.entity.request.CustomerRegisterRequest
 import com.aej.ojekkuapi.user.entity.request.DriverRegisterRequest
 import com.aej.ojekkuapi.user.entity.request.UpdateFcmToken
 import com.aej.ojekkuapi.user.entity.request.UserView
+import com.aej.ojekkuapi.user.socket.RouteLocationSocket
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,6 +31,9 @@ class UserController {
 
     @Autowired
     private lateinit var userServices: UserServices
+
+    @Autowired
+    private lateinit var routeLocationSocket: RouteLocationSocket
 
     @GetMapping
     suspend fun getUser(): BaseResponse<UserView> {
@@ -97,5 +101,11 @@ class UserController {
         @PathVariable(value = "user_id") userId: String
     ): BaseResponse<UserView> {
         return userServices.getUserByUserIdAndRole(userId, User.Role.CUSTOMER).toResponses()
+    }
+
+    @PostMapping("/socket/test")
+    suspend fun testSocket(): String {
+        routeLocationSocket.send("postman", "data dari backend")
+        return "ok"
     }
 }

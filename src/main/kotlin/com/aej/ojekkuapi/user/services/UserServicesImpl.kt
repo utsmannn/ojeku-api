@@ -14,6 +14,7 @@ import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.entity.UserLogin
 import com.aej.ojekkuapi.user.entity.request.UserView
 import com.aej.ojekkuapi.user.repository.UserRepository
+import com.aej.ojekkuapi.user.socket.RouteLocationSocket
 import com.aej.ojekkuapi.utils.toJson
 import org.litote.kmongo.json
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,8 +29,14 @@ class UserServicesImpl(
     @Autowired
     private val messagingComponent: MessagingComponent,
     @Autowired
-    private val locationServices: LocationServices
+    private val locationServices: LocationServices,
+    @Autowired
+    private val routeLocationSocket: RouteLocationSocket
 ) : UserServices {
+
+    init {
+        routeLocationSocket.init(userRepository)
+    }
 
     override suspend fun login(userLogin: UserLogin): Result<LoginResponse> {
         val resultUser = userRepository.getUserByUsername(userLogin.username)
@@ -84,31 +91,33 @@ class UserServicesImpl(
         val updatedUserResult = userRepository.updateUserLocation(id, coordinate).map { it.toUserView() }
         val currentUser = updatedUserResult.getOrThrow()
         if (currentUser.role == User.Role.DRIVER) {
-            val currentBooking = bookingRepository.getBookingByDriverId(currentUser.id).getOrNull()
+
+            val currentBooking = bookingRepository.getBookingByDriverIdAndStatus(
+                currentUser.id,
+                Booking.BookingStatus.ACCEPTED
+            ).getOrNull() ?: bookingRepository.getBookingByDriverIdAndStatus(
+                currentUser.id,
+                Booking.BookingStatus.ONGOING
+            ).getOrNull()
+
             val customerId = currentBooking?.customerId
-            if (customerId != null && currentBooking.status == Booking.BookingStatus.ACCEPTED) {
+            if (customerId != null) {
                 val currentCustomer = userRepository.getUserById(customerId).getOrNull()
                 if (currentCustomer != null) {
-                    val pickupCoordinate = currentBooking.routeLocation.from.coordinate
-                    val route = locationServices.getRoutesLocation(coordinate, pickupCoordinate).getOrNull()
-                    val messageExtra = mapOf(
+                    val otherCoordinate = if (currentBooking.status == Booking.BookingStatus.ACCEPTED) {
+                        currentBooking.routeLocation.from.coordinate
+                    } else {
+                        currentBooking.routeLocation.destination.coordinate
+                    }
+
+                    val route = locationServices.getRoutesLocation(coordinate, otherCoordinate).getOrNull()
+                    val message = mapOf(
                         "driver" to coordinate,
                         "route" to route
                     )
 
-                    val driverToken = currentUser.fcmToken
-                    val customerToken = currentCustomer.fcmToken
-                    val messageData = FcmMessage.FcmMessageData(
-                        type = FcmMessage.Type.BOOKING_LOCATION,
-                        customerId = customerId,
-                        driverId = currentUser.id,
-                        bookingId = currentBooking.id,
-                        message = "Driver position updated",
-                        json = messageExtra.json
-                    )
-
-                    messagingComponent.sendMessage(customerToken, messageData)
-                    messagingComponent.sendMessage(driverToken, messageData)
+                    routeLocationSocket.send(currentCustomer.username, message.json)
+                    routeLocationSocket.send(currentUser.username, message.json)
                 }
             }
         }

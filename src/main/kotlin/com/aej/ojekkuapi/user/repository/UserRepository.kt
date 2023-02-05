@@ -12,4 +12,6 @@ interface UserRepository {
     fun updateDriverActive(id: String, isDriverActive: Boolean): Result<User>
     fun updateUserLocation(id: String, coordinate: Coordinate): Result<User>
     fun findDriverByCoordinates(coordinate: Coordinate): Result<List<User>>
+
+    fun getAllUser(): Result<List<User>>
 }

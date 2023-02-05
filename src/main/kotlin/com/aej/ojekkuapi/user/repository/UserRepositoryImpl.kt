@@ -81,11 +81,15 @@ class UserRepositoryImpl(
                     "       { \$nearSphere :\n" +
                     "          {\n" +
                     "            \$geometry: { type: \"Point\",  coordinates: [ ${coordinate.longitude}, ${coordinate.latitude} ] },\n" +
-                    "            \$minDistance: 10,\n" +
+                    "            \$minDistance: 0,\n" +
                     "            \$maxDistance: 2000\n" +
                     "          }\n" +
                     "       }\n" +
                     "   }"
         ).toList().filter { it.extra.safeCastTo(DriverExtras::class.java).isActive }.toResult()
+    }
+
+    override fun getAllUser(): Result<List<User>> {
+        return getCollection().find().toList().toResult()
     }
 }

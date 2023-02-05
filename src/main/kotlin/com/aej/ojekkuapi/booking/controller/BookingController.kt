@@ -3,6 +3,7 @@ package com.aej.ojekkuapi.booking.controller
 import com.aej.ojekkuapi.BaseResponse
 import com.aej.ojekkuapi.booking.entity.Booking
 import com.aej.ojekkuapi.booking.entity.BookingMinified
+import com.aej.ojekkuapi.booking.entity.Reason
 import com.aej.ojekkuapi.booking.services.BookingServices
 import com.aej.ojekkuapi.coordinateStringToData
 import com.aej.ojekkuapi.location.mapper.Mapper
@@ -69,9 +70,17 @@ class BookingController {
 
     @PostMapping("/customer/cancel")
     suspend fun cancelBookingCustomer(
-        @RequestParam(value = "booking_id", required = true) bookingId: String
+        @RequestParam(value = "booking_id", required = true) bookingId: String,
+        //@RequestParam(value = "reason_id", required = true) reasonId: String
     ): BaseResponse<Booking> {
-        return bookingServices.cancelBookingFromCustomer(bookingId).toResponses()
+        //val reason = Reason.reasonOf(reasonId)
+        val reason = Reason.default
+        return bookingServices.cancelBookingFromCustomer(bookingId, reason).toResponses()
+    }
+
+    @GetMapping("/customer/reason")
+    suspend fun getReasonCustomer(): BaseResponse<List<Reason>> {
+        return bookingServices.getReasonList().toResponses()
     }
 
     @PostMapping("/driver/reject")
@@ -89,4 +98,20 @@ class BookingController {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
         return bookingServices.acceptBookingFromDriver(bookingId, userId.orEmpty()).toResponses()
     }
+
+    @PostMapping("/driver/take")
+    suspend fun ongoingBookingDriver(
+        @RequestParam(value = "booking_id", required = true) bookingId: String
+    ): BaseResponse<Booking> {
+        return bookingServices.ongoingBookingFromDriver(bookingId).toResponses()
+    }
+
+    @PostMapping("/driver/complete")
+    suspend fun completeBookingDriver(
+        @RequestParam(value = "booking_id", required = true) bookingId: String
+    ): BaseResponse<Booking> {
+        return bookingServices.completeBookingFromDriver(bookingId).toResponses()
+    }
+
+
 }

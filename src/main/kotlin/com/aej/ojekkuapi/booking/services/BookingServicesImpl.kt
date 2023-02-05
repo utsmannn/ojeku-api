@@ -3,8 +3,10 @@ package com.aej.ojekkuapi.booking.services
 import com.aej.ojekkuapi.OjekuException
 import com.aej.ojekkuapi.booking.entity.Booking
 import com.aej.ojekkuapi.booking.entity.BookingDriver
+import com.aej.ojekkuapi.booking.entity.Reason
 import com.aej.ojekkuapi.booking.repository.BookingDriverRepository
 import com.aej.ojekkuapi.booking.repository.BookingRepository
+import com.aej.ojekkuapi.distanceTo
 import com.aej.ojekkuapi.location.entity.Coordinate
 import com.aej.ojekkuapi.location.services.LocationServices
 import com.aej.ojekkuapi.messaging.MessagingComponent
@@ -81,8 +83,26 @@ class BookingServicesImpl(
             bookingId = booking.id,
             drivers = driverAvailable.map { it.id }
         )
-        bookingDriverRepository.createBookingDriver(bookingDriver)
-        return bookingRepository.insertBooking(booking)
+        val existingBooking = bookingRepository.getBookingByCustomerId(customerId).getOrNull()
+        return if (existingBooking != null) {
+            val existingStatus = existingBooking.status
+            val statusPermissionToBooking = listOf(
+                Booking.BookingStatus.DONE,
+                Booking.BookingStatus.CANCELED,
+                Booking.BookingStatus.UNDEFINE
+            )
+
+            val isPermissionToBooking = statusPermissionToBooking.contains(existingStatus)
+            if (isPermissionToBooking) {
+                bookingDriverRepository.createBookingDriver(bookingDriver)
+                bookingRepository.insertBooking(booking)
+            } else {
+                throw OjekuException("Booking already exists!")
+            }
+        } else {
+            bookingDriverRepository.createBookingDriver(bookingDriver)
+            bookingRepository.insertBooking(booking)
+        }
     }
 
     override suspend fun startBookingFromCustomer(bookingId: String, transType: Booking.TransType): Result<Booking> {
@@ -103,16 +123,16 @@ class BookingServicesImpl(
             .filter { driverAvailable.contains(it.id) }
         if (drivers.isNotEmpty()) {
             val currentFirstDriver = drivers.first()
-            notifyToUsers(currentBooking.customerId, currentFirstDriver.id, currentBooking)
+            notifyToUsers(currentBooking.customerId, currentFirstDriver.id, currentBooking, FcmMessage.Type.BOOKING_REQUEST)
         }
         return if (driverAvailable.isNotEmpty()) {
             bookingRepository.getBookingById(bookingId)
         } else {
-            cancelBookingFromCustomer(bookingId)
+            cancelBookingFromCustomer(bookingId, Reason.default)
         }
     }
 
-    override suspend fun cancelBookingFromCustomer(bookingId: String): Result<Booking> {
+    override suspend fun cancelBookingFromCustomer(bookingId: String, reason: Reason): Result<Booking> {
         val currentBooking = bookingRepository.getBookingById(bookingId).getOrThrow()
         bookingDriverRepository.clearBookingDriver(bookingId)
         bookingRepository.updateBookingStatus(
@@ -143,11 +163,11 @@ class BookingServicesImpl(
     override suspend fun rejectBookingFromDriver(bookingId: String, driverId: String): Result<Boolean> {
         val bookingDriver = bookingDriverRepository.removeDriverBooking(bookingId, driverId).getOrThrow()
         if (bookingDriver.drivers.isEmpty()) {
-            cancelBookingFromCustomer(bookingId)
+            cancelBookingFromCustomer(bookingId, Reason.default)
             return bookingDriverRepository.clearBookingDriver(bookingId)
         }
 
-        val updatedBooking =  bookingRepository.updateBookingStatus(
+        val updatedBooking = bookingRepository.updateBookingStatus(
             bookingId = bookingId,
             bookingStatus = Booking.BookingStatus.REQUEST_RETRY,
             driverId = ""
@@ -159,12 +179,22 @@ class BookingServicesImpl(
 
     override suspend fun ongoingBookingFromDriver(bookingId: String): Result<Booking> {
         val currentBooking = bookingRepository.getBookingById(bookingId).getOrThrow()
+        val currentDriver = userServices.getUserByUserId(currentBooking.driverId).getOrThrow()
+
+        val coordinateDriver = currentDriver.lastLocation
+        val coordinatePickup = currentBooking.routeLocation.from.coordinate
+
+        if (coordinateDriver.distanceTo(coordinatePickup) > 50.0) {
+            throw OjekuException("Driver is too far")
+        }
+
         bookingRepository.updateBookingStatus(
             bookingId,
             bookingStatus = Booking.BookingStatus.ONGOING,
             driverId = currentBooking.driverId
         )
         notifyToUsers(currentBooking.customerId, currentBooking.driverId, currentBooking)
+        notifyDriverPosition(currentBooking.driverId)
         return bookingRepository.getBookingById(bookingId)
     }
 
@@ -179,12 +209,23 @@ class BookingServicesImpl(
         return bookingRepository.getBookingById(bookingId)
     }
 
-    private suspend fun notifyToUsers(customerId: String, driverId: String, booking: Booking) {
+    override suspend fun getReasonList(): Result<List<Reason>> {
+        return Result.success(
+            Reason.list
+        )
+    }
+
+    private suspend fun notifyToUsers(
+        customerId: String,
+        driverId: String,
+        booking: Booking,
+        type: FcmMessage.Type = FcmMessage.Type.BOOKING
+    ) {
         val customer = userServices.getUserByUserId(customerId).getOrNull()
         val driver = userServices.getUserByUserId(driverId).getOrNull()
 
         val messageData = FcmMessage.FcmMessageData(
-            type = FcmMessage.Type.BOOKING,
+            type = type,
             customerId = customerId,
             driverId = driverId,
             bookingId = booking.id

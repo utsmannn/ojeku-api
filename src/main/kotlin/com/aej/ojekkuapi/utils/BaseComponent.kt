@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException
 import okhttp3.*
+import org.litote.kmongo.json
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -12,7 +14,12 @@ import kotlin.coroutines.suspendCoroutine
 open class BaseComponent {
 
     inline fun <reified T> getHttp(url: String): Result<T> {
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .callTimeout(2 * 60, TimeUnit.SECONDS)
+            .connectTimeout(2 * 60, TimeUnit.SECONDS)
+            .readTimeout(2 * 60, TimeUnit.SECONDS)
+            .writeTimeout(2 * 60, TimeUnit.SECONDS)
+            .build()
 
         return try {
             val request = Request.Builder()
@@ -58,7 +65,7 @@ open class BaseComponent {
                 .post(requestBody)
                 .build()
 
-            println("asuuuuu body -> ${requestBody}")
+            println("asuuuuu body -> ${requestBody.json}")
             client.newCall(request)
                 .enqueue(object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
@@ -70,6 +77,7 @@ open class BaseComponent {
                         val bodyString = response.body?.string()
                         val data = ObjectMapper().readValue(bodyString, T::class.java)
                         val result = Result.success(data)
+                        println("network response -> $bodyString")
                         task.resume(result)
                     }
                 })

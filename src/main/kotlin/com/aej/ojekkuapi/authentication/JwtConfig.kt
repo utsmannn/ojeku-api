@@ -44,7 +44,8 @@ class JwtConfig : WebSecurityConfigurerAdapter() {
         val postPermit = listOf(
             "/api/user/login",
             "/api/user/customer/register",
-            "/api/user/driver/register"
+            "/api/user/driver/register",
+            "/api/user/socket/test"
         )
 
         val getPermit = listOf(

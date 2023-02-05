@@ -42,6 +42,9 @@ dependencies {
 
     // okhttp
     implementation("com.squareup.okhttp3:okhttp:$okHttpVersion")
+
+    // socket io
+    implementation("com.corundumstudio.socketio:netty-socketio:1.7.19")
 }
 
 tasks.withType<KotlinCompile> {
