@@ -8,6 +8,7 @@ import com.aej.ojekkuapi.location.entity.LocationHereApiResult
 import com.aej.ojekkuapi.location.entity.LocationHereRouteResult
 import com.aej.ojekkuapi.location.entity.response.OpenRouteResponse
 import com.aej.ojekkuapi.location.util.PolylineEncoderDecoder
+import kotlin.math.ceil
 
 object Mapper {
     fun mapSearchLocationHereToLocation(locationResult: LocationHereApiResult): List<Location> {

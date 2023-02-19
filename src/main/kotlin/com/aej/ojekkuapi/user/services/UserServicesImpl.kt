@@ -110,6 +110,8 @@ class UserServicesImpl(
                         currentBooking.routeLocation.destination.coordinate
                     }
 
+                    println("asuuuuuu current status ->  ${currentBooking.status}")
+
                     val route = locationServices.getRoutesLocation(coordinate, otherCoordinate).getOrNull()
                     val message = mapOf(
                         "driver" to coordinate,

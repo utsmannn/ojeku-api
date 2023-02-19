@@ -12,6 +12,7 @@ import com.aej.ojekkuapi.location.services.LocationServices
 import com.aej.ojekkuapi.messaging.MessagingComponent
 import com.aej.ojekkuapi.messaging.entity.FcmMessage
 import com.aej.ojekkuapi.toResult
+import com.aej.ojekkuapi.user.entity.User
 import com.aej.ojekkuapi.user.repository.UserRepository
 import com.aej.ojekkuapi.user.services.UserServices
 import com.aej.ojekkuapi.utils.PriceCalculator
@@ -50,6 +51,28 @@ class BookingServicesImpl(
 
     override suspend fun getBookingsCustomer(customerId: String): Result<List<Booking>> {
         return bookingRepository.getBookingsByCustomerId(customerId)
+    }
+
+    override suspend fun getBookingsCustomerByStatus(
+        customerId: String,
+        status: Booking.BookingStatus
+    ): Result<List<Booking>> {
+        return bookingRepository.getBookingByCustomerIdAndStatusList(customerId, status)
+    }
+
+    override suspend fun getBookingsDriverByStatus(
+        driverId: String,
+        status: Booking.BookingStatus
+    ): Result<List<Booking>> {
+        return bookingRepository.getBookingByDriverIdAndStatusList(driverId, status)
+    }
+
+    override suspend fun getBookingsUserByStatus(userId: String, status: Booking.BookingStatus): Result<List<Booking>> {
+        val user = userServices.getUserByUserId(userId)
+        return when (user.getOrThrow().role) {
+            User.Role.CUSTOMER -> getBookingsCustomerByStatus(userId, status)
+            User.Role.DRIVER -> getBookingsDriverByStatus(userId, status)
+        }
     }
 
     override suspend fun createBookingFromCustomer(
@@ -109,7 +132,7 @@ class BookingServicesImpl(
         val currentBooking = bookingRepository.getBookingById(bookingId).getOrThrow()
         val currentRoutesLocation = currentBooking.routeLocation
         val currentRoutes = currentRoutesLocation.routes
-        val newPrice = PriceCalculator.calculateRoute(currentRoutes, 22000.0)
+        val newPrice = PriceCalculator.calculateRoute(currentRoutes)
         bookingRepository.startBooking(
             bookingId,
             transType,

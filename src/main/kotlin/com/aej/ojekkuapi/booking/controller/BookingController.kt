@@ -40,9 +40,9 @@ class BookingController {
     }
 
     @GetMapping("/activity")
-    suspend fun getActivityBookingCustomer(): BaseResponse<List<BookingMinified>> {
+    suspend fun getActivityBooking(): BaseResponse<List<BookingMinified>> {
         val userId = SecurityContextHolder.getContext().authentication.principal as? String
-        return bookingServices.getBookingsCustomer(userId.orEmpty()).map {
+        return bookingServices.getBookingsUserByStatus(userId.orEmpty(), Booking.BookingStatus.DONE).map {
             it.map { booking -> Mapper.mapBookingToMinified(booking) }
         }.toResponses()
     }
@@ -71,10 +71,9 @@ class BookingController {
     @PostMapping("/customer/cancel")
     suspend fun cancelBookingCustomer(
         @RequestParam(value = "booking_id", required = true) bookingId: String,
-        //@RequestParam(value = "reason_id", required = true) reasonId: String
+        @RequestParam(value = "reason_id", required = false) reasonId: String?
     ): BaseResponse<Booking> {
-        //val reason = Reason.reasonOf(reasonId)
-        val reason = Reason.default
+        val reason = reasonId?.let { Reason.reasonOf(it) } ?: Reason.default
         return bookingServices.cancelBookingFromCustomer(bookingId, reason).toResponses()
     }
 

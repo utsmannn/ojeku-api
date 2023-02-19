@@ -48,6 +48,35 @@ class BookingRepositoryImpl(
         ).toResult("Transaction not found")
     }
 
+
+    override fun getBookingByCustomerIdAndStatusList(
+        customerId: String,
+        status: Booking.BookingStatus
+    ): Result<List<Booking>> {
+        return getCollection().find(
+            Booking::customerId eq customerId,
+            Booking::status eq status
+        ).sort(
+            descending(
+                Booking::time
+            )
+        ).toList().toResult("Transaction not found")
+    }
+
+    override fun getBookingByDriverIdAndStatusList(
+        driverId: String,
+        status: Booking.BookingStatus
+    ): Result<List<Booking>> {
+        return getCollection().find(
+            Booking::driverId eq driverId,
+            Booking::status eq status
+        ).sort(
+            descending(
+                Booking::time
+            )
+        ).toList().toResult("Transaction not found")
+    }
+
     override fun getBookingByDriverIdAndStatus(driverId: String, status: Booking.BookingStatus): Result<Booking> {
         return getCollection().findOne(
             Booking::driverId eq driverId,
